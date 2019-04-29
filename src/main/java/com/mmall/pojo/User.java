@@ -21,11 +21,13 @@ public class User {
 
     private Integer role;
 
+    private Integer status;
+
     private Date createTime;
 
     private Date updateTime;
 
-    public User(Integer id, String username, String password, String salt, String email, String phone, String question, String answer, Integer role, Date createTime, Date updateTime) {
+    public User(Integer id, String username, String password, String salt, String email, String phone, String question, String answer, Integer role, Integer status, Date createTime, Date updateTime) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -35,6 +37,7 @@ public class User {
         this.question = question;
         this.answer = answer;
         this.role = role;
+        this.status = status;
         this.createTime = createTime;
         this.updateTime = updateTime;
     }
@@ -113,6 +116,14 @@ public class User {
 
     public void setRole(Integer role) {
         this.role = role;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 
     public Date getCreateTime() {

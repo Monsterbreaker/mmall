@@ -1,26 +1,27 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mmall.dao.UserMapper">
     <resultMap id="BaseResultMap" type="com.mmall.pojo.User">
         <constructor>
-            <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer"/>
-            <arg column="username" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="password" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="salt" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="email" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="phone" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="question" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="answer" jdbcType="VARCHAR" javaType="java.lang.String"/>
-            <arg column="role" jdbcType="INTEGER" javaType="java.lang.Integer"/>
-            <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
-            <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+            <idArg column="id" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="username" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="password" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="salt" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="email" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="phone" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="question" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="answer" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="role" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="status" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="create_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+            <arg column="update_time" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         </constructor>
     </resultMap>
     <sql id="Base_Column_List">
-    id, username, password, salt, email, phone, question, answer, role, create_time, 
+    id, username, password, salt, email, phone, question, answer, role, status, create_time, 
     update_time
   </sql>
-    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
         from mmall_user
@@ -34,11 +35,13 @@
     insert into mmall_user (id, username, password, 
       salt, email, phone, 
       question, answer, role, 
-      create_time, update_time)
+      status, create_time, update_time
+      )
     values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
       #{salt,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, 
       #{question,jdbcType=VARCHAR}, #{answer,jdbcType=VARCHAR}, #{role,jdbcType=INTEGER}, 
-      now(), now())
+      #{status,jdbcType=INTEGER}, now(), now()
+      )
   </insert>
     <insert id="insertSelective" parameterType="com.mmall.pojo.User">
         insert into mmall_user
@@ -69,6 +72,9 @@
             </if>
             <if test="role != null">
                 role,
+            </if>
+            <if test="status != null">
+                status,
             </if>
             <if test="createTime != null">
                 create_time,
@@ -105,6 +111,9 @@
             <if test="role != null">
                 #{role,jdbcType=INTEGER},
             </if>
+            <if test="status != null">
+                #{status,jdbcType=INTEGER},
+            </if>
             <if test="createTime != null">
                 now(),
             </if>
@@ -140,6 +149,9 @@
             <if test="role != null">
                 role = #{role,jdbcType=INTEGER},
             </if>
+            <if test="status != null">
+                status = #{status,jdbcType=INTEGER},
+            </if>
             <if test="createTime != null">
                 create_time = #{createTime,jdbcType=TIMESTAMP},
             </if>
@@ -159,26 +171,76 @@
       question = #{question,jdbcType=VARCHAR},
       answer = #{answer,jdbcType=VARCHAR},
       role = #{role,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
-    <select id="checkUsername" resultType="java.lang.Integer" parameterType="string">
+    <update id="updatePasswordByUsername">
+        update mmall_user
+        set password=#{password},
+        update_time=now()
+        where username=#{username}
+    </update>
+    <select id="checkUsername" parameterType="string" resultType="java.lang.Integer">
         select count(1)
         from mmall_user
-        where username =#{username};
+        where username =#{username}
     </select>
-
-    <select id="checkEmail" resultType="java.lang.Integer" parameterType="string">
+    <select id="checkEmail" parameterType="string" resultType="java.lang.Integer">
         select count(1)
         from mmall_user
-        where email=#{email};
+        where email=#{email}
     </select>
-
-    <select id="selectLogin" resultMap="BaseResultMap" parameterType="map">
+    <select id="selectLogin" parameterType="map" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
         from mmall_user
-        where username=#{username}and password=#{password};
+        where username=#{username}and password=#{password}
+    </select>
+    <select id="selectSaltByUsername" parameterType="string" resultType="java.lang.String">
+        select salt
+        from mmall_user
+        where username=#{username}
+    </select>
+    <select id="selectQuestionByUsername" parameterType="string" resultType="java.lang.String">
+        select question
+        from mmall_user
+        where username=#{username}
+    </select>
+    <select id="checkAnswerByUsername" parameterType="string" resultType="java.lang.Integer">
+        select count(1)
+        from mmall_user
+        where username=#{username}
+        and answer=#{answer}
+    </select>
+    <select id="checkStatus" parameterType="string" resultType="java.lang.Integer">
+        select status
+        from mmall_user
+        where username=#{username}
+    </select>
+    <select id="checkPasswordByUsername" resultType="java.lang.Integer" parameterType="map">
+        select count(1)
+        from mmall_user
+        where usename=#{username}
+        and password=#{password}
+    </select>
+    <select id="checkPasswordByUserId" resultType="java.lang.Integer" parameterType="map">
+        select count(1)
+        from mmall_user
+        where id=#{userId}
+        and password=#{password}
+    </select>
+    <select id="checkEmailByUserId" resultType="java.lang.Integer" parameterType="map">
+        select count(1)
+        from mmall_user
+        where id!=#{userId}
+        and email=#{email}
+    </select>
+    <select id="checkUsernameByUserId" resultType="java.lang.Integer" parameterType="map">
+        select count(1)
+        from mmall_user
+        where id!=#{userId}
+        and username=#{username}
     </select>
 </mapper>

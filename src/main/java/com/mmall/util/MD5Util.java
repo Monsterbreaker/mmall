@@ -1,6 +1,10 @@
 package com.mmall.util;
 
+import org.apache.commons.codec.binary.Base64;
+
 import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Random;
 
 /**
  * Created by geely
@@ -45,8 +49,8 @@ public class MD5Util {
         return resultString.toUpperCase();
     }
 
-    public static String MD5EncodeUtf8(String origin) {
-        origin = origin + PropertiesUtil.getProperty("password.salt", "");
+    public static String MD5EncodeUtf8(String origin,String salt) {
+        origin = origin + salt;
         return MD5Encode(origin, "utf-8");
     }
 
@@ -54,4 +58,11 @@ public class MD5Util {
     private static final String hexDigits[] = {"0", "1", "2", "3", "4", "5",
             "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
 
+
+    public static String createRandomSalt(){
+        final Random r = new SecureRandom();
+        byte[] salt = new byte[32];
+        r.nextBytes(salt);
+        return Base64.encodeBase64String(salt);
+    }
 }
