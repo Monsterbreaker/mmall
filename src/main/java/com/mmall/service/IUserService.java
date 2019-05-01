@@ -24,4 +24,10 @@ public interface IUserService {
     ServerResponse<User> getInfo(Integer userId);
 
     ServerResponse<User> updateInfo(User user);
+
+    ServerResponse checkCustomerRole(User user);
+
+    ServerResponse checkSellerRole(User user);
+
+    ServerResponse checkAdminRole(User user);
 }

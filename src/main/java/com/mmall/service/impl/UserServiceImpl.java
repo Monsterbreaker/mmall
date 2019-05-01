@@ -341,4 +341,48 @@ public class UserServiceImpl implements IUserService {
         String salt = userMapper.selectSaltByUsername(username);
         return MD5Util.MD5EncodeUtf8(password, salt);
     }
+
+
+
+
+
+    //检查用户角色
+    /**
+     * 检查当前用户是不是顾客
+     * @param user
+     * @return
+     */
+    @Override
+    public ServerResponse checkCustomerRole(User user) {
+        if(user!=null&&user.getRole()==Const.ROLE.ROLE_CUMSTOMER){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByErrorMessage("当前用户不是顾客");
+    }
+
+    /**
+     * 检查当前用户是不是卖家
+     * @param user
+     * @return
+     */
+    @Override
+    public ServerResponse checkSellerRole(User user) {
+        if(user!=null&&user.getRole()==Const.ROLE.ROLE_SELLER){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByErrorMessage("当前用户不是卖家");
+    }
+
+    /**
+     * 检查当前用户是不是管理员
+     * @param user
+     * @return
+     */
+    @Override
+    public ServerResponse checkAdminRole(User user){
+        if(user!=null&&user.getRole()==Const.ROLE.ROLE_ADMIN){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByErrorMessage("当前用户不是管理员");
+    }
 }
