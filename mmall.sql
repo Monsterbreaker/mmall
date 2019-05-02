@@ -231,7 +231,9 @@ CREATE TABLE `mmall_user` (
 --  Records of `mmall_user`
 -- ----------------------------
 BEGIN;
-INSERT INTO `mmall_user` VALUES (22, 'admin', '146163D484939F4D93FA2B08A768BAC1', 'qV4hm0ykGm9qPGi6ZSd27rYCL8Mq9sA3H2Y3uTV5PZ0=', 'test1@qq.com', '12345678901', 'question', 'answer', 0, 0, '2019-04-27 11:13:08', '2019-04-27 16:06:50'),(1, 'c1', '5641927621D4ED7B4F3D91241A2E10F3', 'zuaAFe+UHElysVgXN6+McJtcWyk0v6nGEJvHLtf9u5U=', 'test2@qq.com', '12345678901', 'question', 'answer', 2, 0, '2019-04-27 14:09:02', '2019-04-29 13:21:30');
+INSERT INTO `mmall_user` VALUES (22, 'admin', '146163D484939F4D93FA2B08A768BAC1', 'qV4hm0ykGm9qPGi6ZSd27rYCL8Mq9sA3H2Y3uTV5PZ0=', 'test1@qq.com', '12345678901', 'question', 'answer', 2, 0, '2019-04-27 11:13:08', '2019-04-27 16:06:50'),
+(1, 'c1', '5641927621D4ED7B4F3D91241A2E10F3', 'zuaAFe+UHElysVgXN6+McJtcWyk0v6nGEJvHLtf9u5U=', 'test2@qq.com', '12345678901', 'question', 'answer', 0, 0, '2019-04-27 14:09:02', '2019-04-29 13:21:30'),
+(24, 's1', '5641927621D4ED7B4F3D91241A2E10F3', 'zuaAFe+UHElysVgXN6+McJtcWyk0v6nGEJvHLtf9u5U=', 'test3@qq.com', '12345678901', 'question', 'answer', 1, 0, '2019-04-27 14:09:02', '2019-04-29 13:21:30');
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
