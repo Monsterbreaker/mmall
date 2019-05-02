@@ -26,7 +26,7 @@ public class UserController {
      * @param session
      * @return
      */
-    @RequestMapping(value = "login.do", method = RequestMethod.POST)
+    @RequestMapping(value = "login", method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<User> login(String username, String password, HttpSession session) {
         if(session.getAttribute(Const.CURRENT_USER)!=null){
@@ -44,7 +44,7 @@ public class UserController {
      * @param user
      * @return
      */
-    @RequestMapping(value = "register.do",method = RequestMethod.POST)
+    @RequestMapping(value = "register",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> register(User user){
         ServerResponse<String> response=iUserService.register(user);
@@ -56,7 +56,7 @@ public class UserController {
      * @param session
      * @return
      */
-    @RequestMapping(value = "logout.do",method = RequestMethod.GET)
+    @RequestMapping(value = "logout",method = RequestMethod.GET)
     @ResponseBody
     public ServerResponse<String> logout(HttpSession session){
         if(session.getAttribute(Const.CURRENT_USER)==null){
@@ -82,7 +82,7 @@ public class UserController {
      * @param email
      * @return
      */
-    @RequestMapping(value = "email_check.do",method=RequestMethod.GET)
+    @RequestMapping(value = "email_check",method=RequestMethod.GET)
     @ResponseBody
     public ServerResponse<String> checkEmail(String email){
         return iUserService.checkValid(email,Const.EMAIL);
@@ -93,7 +93,7 @@ public class UserController {
      * @param username
      * @return
      */
-    @RequestMapping(value = "status_check.do",method=RequestMethod.GET)
+    @RequestMapping(value = "status_check",method=RequestMethod.GET)
     @ResponseBody
     public ServerResponse<String> checkStatus(String username){
         return iUserService.checkStatus(username);
@@ -104,7 +104,7 @@ public class UserController {
      * @param session
      * @return
      */
-    @RequestMapping(value = "info.do",method = RequestMethod.GET)
+    @RequestMapping(value = "info",method = RequestMethod.GET)
     @ResponseBody
     public ServerResponse<User> getUserInfo(HttpSession session){
         User user= (User) session.getAttribute(Const.CURRENT_USER);
@@ -119,7 +119,7 @@ public class UserController {
      * @param username
      * @return
      */
-    @RequestMapping(value = "question.do",method = RequestMethod.GET)
+    @RequestMapping(value = "question",method = RequestMethod.GET)
     @ResponseBody
     public ServerResponse<String> getQuestion(String username){
         return iUserService.getQuestion(username);
@@ -131,7 +131,7 @@ public class UserController {
      * @param answer
      * @return
      */
-    @RequestMapping(value = "answer_check.do",method = RequestMethod.POST)
+    @RequestMapping(value = "answer_check",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> checkAnswer(String username,String answer){
         return iUserService.checkAnswer(username,answer);
@@ -144,7 +144,7 @@ public class UserController {
      * @param forgetToken
      * @return
      */
-    @RequestMapping(value = "password_reset.do",method = RequestMethod.POST)
+    @RequestMapping(value = "password_reset",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> resetPassword(String username,String newPassword,String forgetToken){
         return iUserService.resetPassword(username,newPassword,forgetToken);
@@ -157,7 +157,7 @@ public class UserController {
      * @param newPassword
      * @return
      */
-    @RequestMapping(value = "password_modify.do",method = RequestMethod.POST)
+    @RequestMapping(value = "password_modify",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> modifyPassword(HttpSession session,String oldPassword,String newPassword){
         User user= (User) session.getAttribute(Const.CURRENT_USER);
