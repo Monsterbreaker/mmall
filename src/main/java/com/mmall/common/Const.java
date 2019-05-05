@@ -18,4 +18,9 @@ public class Const {
         int USER_STATUS_NORMAL=0;//正常状态
         int USER_STATUS_FROZEN=1;//冻结状态
     }
+
+    public interface Cart{
+        int CHECKED=1;//购物车商品为选中状态
+        int UNCHECKED=0;//未选中
+    }
 }
