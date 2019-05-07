@@ -243,4 +243,9 @@
         where id!=#{userId}
         and username=#{username}
     </select>
+    <select id="selectNameByUserId" resultType="java.lang.String" parameterType="int">
+        select username
+        from mmall_user
+        where id=#{userId}
+    </select>
 </mapper>
