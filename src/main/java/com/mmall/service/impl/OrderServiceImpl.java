@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.mmall.common.Const;
+import com.mmall.common.ResponseCode;
 import com.mmall.dao.*;
 import com.mmall.pojo.*;
 import com.mmall.util.DateTimeUtil;
@@ -15,6 +16,7 @@ import com.mmall.util.BigDecimalUtil;
 import com.mmall.vo.OrderItemVo;
 import com.mmall.vo.OrderVo;
 import com.mmall.vo.ShippingVo;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -38,6 +40,8 @@ public class OrderServiceImpl implements IOrderService {
     @Autowired
     private UserMapper userMapper;
 
+    /*-----------------------------------------------用户订单功能Start---------------------------------------------------*/
+
     /**
      * 创建订单
      *
@@ -47,7 +51,12 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public ServerResponse createOrder(Integer userId, Integer shippingId) {
-        //拿购物车数据,按商家分类
+        // 检查参数
+        if(shippingId==null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 拿购物车数据,按商家分类
         List<GroupedCartVo> groupedCartVoList = cartMapper.selectByPrimaryKeyGroupBySellerId(userId);
         if (CollectionUtils.isEmpty(groupedCartVoList)) {
             return ServerResponse.createByErrorMessage("购物车为空");
@@ -93,16 +102,21 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public ServerResponse getOrderByCustomer(Long orderNo, Integer userId) {
-        //获取订单概要
+        // 检查参数
+        if(orderNo==null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 获取订单概要
         Order order = orderMapper.selectByOrderNoAndUserId(orderNo, userId);
         if (order == null) {
             return ServerResponse.createByErrorMessage("订单不存在");
         }
 
-        //获取订单详情
+        // 获取订单详情
         List<OrderItem> orderItemList = orderItemMapper.selectByOrderNoAndUserId(orderNo, userId);
 
-        //生成OrderVo
+        // 生成OrderVo
         OrderVo orderVo = assembleOrderVo(order, orderItemList);
 
         return ServerResponse.createBySuccess(orderVo);
@@ -135,6 +149,11 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public ServerResponse confirmReceipt(Integer userId, Long orderNo) {
+        // 检查参数
+        if(orderNo==null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
         Order order = orderMapper.selectByOrderNoAndUserId(orderNo, userId);
         if (order == null) {
             return ServerResponse.createByErrorMessage("该订单不存在");
@@ -167,6 +186,11 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public ServerResponse cancel(Integer userId, Long orderNo) {
+        // 检查参数
+        if(orderNo==null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
         Order order = orderMapper.selectByOrderNoAndUserId(orderNo, userId);
         if (order == null) {
             return ServerResponse.createByErrorMessage("该订单不存在");
@@ -177,18 +201,112 @@ public class OrderServiceImpl implements IOrderService {
 
         // 更新订单状态
         order.setStatus(Const.OrderStatusEnum.CANCELED.getCode());
-        int updateCount=orderMapper.updateByPrimaryKeySelective(order);
+        int updateCount = orderMapper.updateByPrimaryKeySelective(order);
 
         // 生成更新后的OrderVo
         List<OrderItem> orderItemList = orderItemMapper.selectByOrderNoAndUserId(orderNo, userId);
         OrderVo orderVo = assembleOrderVo(order, orderItemList);
 
-        if(updateCount>0){
-            return ServerResponse.createBySuccess("取消订单成功",orderVo);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("取消订单成功", orderVo);
         }
 
         return ServerResponse.createByErrorMessage("取消订单失败");
     }
+
+    /*-----------------------------------------------用户订单功能End---------------------------------------------------*/
+
+
+    /*-----------------------------------------------商家订单功能Start---------------------------------------------------*/
+
+    /**
+     * 商家根据订单号查看订单
+     *
+     * @param sellerId
+     * @param orderNo
+     * @return
+     */
+    @Override
+    public ServerResponse getOrderBySeller(Integer sellerId, Long orderNo) {
+        // 检查参数
+        if (orderNo == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 查找订单
+        Order order = orderMapper.selectByOrderNoAndSellerId(orderNo, sellerId);
+        if (order == null) {
+            return ServerResponse.createByErrorMessage("该订单不存在");
+        }
+
+        // 查找订单包含的OrderItem
+        List<OrderItem> orderItemList = orderItemMapper.selectByOrderNoAndSellerId(orderNo, sellerId);
+
+        // 组装OrderVo
+        OrderVo orderVo = assembleOrderVo(order, orderItemList);
+
+        return ServerResponse.createBySuccess(orderVo);
+    }
+
+    /**
+     * 商家获取订单列表
+     *
+     * @param sellerId
+     * @param offset
+     * @param limit
+     * @return
+     */
+    @Override
+    public ServerResponse getOrderListBySeller(Integer sellerId, int offset, int limit) {
+        PageHelper.startPage(offset, limit);
+        List<Order> orderList = orderMapper.selectBySellerId(sellerId);
+        List<OrderVo> orderVoList = assembleOrderVoList(orderList);
+        PageInfo pageInfo = new PageInfo(orderList);
+        pageInfo.setList(orderVoList);
+        return ServerResponse.createBySuccess(pageInfo);
+    }
+
+    /**
+     * 商家发货
+     *
+     * @param sellerId
+     * @param orderNo
+     * @return
+     */
+    @Override
+    public ServerResponse deliver(Integer sellerId, Long orderNo) {
+        // 检查参数
+        if (orderNo == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 查找订单
+        Order order = orderMapper.selectByOrderNoAndSellerId(orderNo, sellerId);
+        if (order == null) {
+            return ServerResponse.createByErrorMessage("该订单不存在");
+        }
+
+        // 检查订单状态
+        if (order.getStatus() != Const.OrderStatusEnum.PAID.getCode()) {
+            return ServerResponse.createByErrorMessage("该订单当前状态无法发货");
+        }
+
+        // 更新订单状态
+        order.setStatus(Const.OrderStatusEnum.SHIPPED.getCode());
+        int updateCount = orderMapper.updateByPrimaryKeySelective(order);
+
+        // 生成更新后的OrderVo
+        List<OrderItem> orderItemList = orderItemMapper.selectByOrderNoAndSellerId(orderNo, sellerId);
+        OrderVo orderVo = assembleOrderVo(order, orderItemList);
+
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("发货成功", orderVo);
+        }
+
+        return ServerResponse.createByErrorMessage("发货失败");
+    }
+
+    /*-----------------------------------------------商家订单功能End---------------------------------------------------*/
 
     /**
      * 根据购物车中选中商品，生成单个商家的OrderItem

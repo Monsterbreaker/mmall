@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping("/order/")
+@RequestMapping("/customer/order/")
 public class OrderController {
     @Autowired
     IOrderService iOrderService;

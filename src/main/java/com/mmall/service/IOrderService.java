@@ -8,10 +8,15 @@ public interface IOrderService {
 
     ServerResponse getOrderByCustomer(Long orderNo, Integer userId);
 
-    // TODO: 2019/5/7 生成订单列表
     ServerResponse getOrderListByCustomer(Integer userId, int offset, int limit);
 
     ServerResponse confirmReceipt(Integer userId, Long orderNo);
 
     ServerResponse cancel(Integer userId, Long orderNo);
+
+    ServerResponse getOrderBySeller(Integer sellerId, Long orderNo);
+
+    ServerResponse getOrderListBySeller(Integer sellerId, int offset, int limit);
+
+    ServerResponse deliver(Integer sellerId, Long orderNo);
 }
