@@ -12,14 +12,45 @@
       <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
     </constructor>
   </resultMap>
+  <resultMap id="GroupedCarts" type="com.mmall.vo.GroupedCartVo">
+    <id property="sellerId" column="seller_id" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+    <result property="sellerName" column="seller_name" jdbcType="VARCHAR" javaType="java.lang.String"/>
+    <result property="userId" column="user_id" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+    <collection property="carts" column="seller_id" ofType="com.mmall.pojo.Cart" javaType="ArrayList" select="selectCheckedGroupBySellerId"/>
+  </resultMap>
   <sql id="Base_Column_List" >
     id, user_id, product_id, quantity, checked, create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from mmall_cart
     where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectCheckedGroupBySellerId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+    select
+      mmall_cart.id,
+      mmall_cart.user_id,
+      mmall_cart.product_id,
+      mmall_cart.quantity,
+      mmall_cart.checked,
+      mmall_cart.create_time,
+      mmall_cart.update_time
+    FROM
+      mmall_cart
+    INNER JOIN mmall_product ON mmall_cart.product_id = mmall_product.id
+    where seller_id = #{seller_id,jdbcType=INTEGER}
+    and checked=1
+  </select>
+  <select id="selectByPrimaryKeyGroupBySellerId" resultMap="GroupedCarts" parameterType="java.lang.Integer">
+    SELECT DISTINCT
+      mmall_product.seller_id,
+      mmall_product.seller_name,
+      mmall_cart.user_id
+    FROM
+      mmall_cart
+	LEFT JOIN mmall_product ON mmall_cart.product_id = mmall_product.id
+	WHERE mmall_cart.user_id=#{userId}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
     delete from mmall_cart
@@ -30,8 +61,8 @@
       quantity, checked, create_time, 
       update_time)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{productId,jdbcType=INTEGER}, 
-      #{quantity,jdbcType=INTEGER}, #{checked,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{updateTime,jdbcType=TIMESTAMP})
+      #{quantity,jdbcType=INTEGER}, #{checked,jdbcType=INTEGER}, now(),
+      now())
   </insert>
   <insert id="insertSelective" parameterType="com.mmall.pojo.Cart" >
     insert into mmall_cart
@@ -75,10 +106,10 @@
         #{checked,jdbcType=INTEGER},
       </if>
       <if test="createTime != null" >
-        #{createTime,jdbcType=TIMESTAMP},
+        now(),
       </if>
       <if test="updateTime != null" >
-        #{updateTime,jdbcType=TIMESTAMP},
+        now(),
       </if>
     </trim>
   </insert>
@@ -101,7 +132,7 @@
         create_time = #{createTime,jdbcType=TIMESTAMP},
       </if>
       <if test="updateTime != null" >
-        update_time = #{updateTime,jdbcType=TIMESTAMP},
+        update_time = now(),
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
@@ -113,7 +144,7 @@
       quantity = #{quantity,jdbcType=INTEGER},
       checked = #{checked,jdbcType=INTEGER},
       create_time = #{createTime,jdbcType=TIMESTAMP},
-      update_time = #{updateTime,jdbcType=TIMESTAMP}
+      update_time = now()
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>
