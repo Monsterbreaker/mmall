@@ -196,7 +196,9 @@
         select
         <include refid="Base_Column_List"/>
         from mmall_user
-        where username=#{username}and password=#{password}
+        where username=#{username}
+        and password=#{password}
+        and role=#{role}
     </select>
     <select id="selectSaltByUsername" parameterType="string" resultType="java.lang.String">
         select salt
@@ -247,5 +249,12 @@
         select username
         from mmall_user
         where id=#{userId}
+    </select>
+    <select id="selectUsersByUsernameAndRole" resultMap="BaseResultMap" parameterType="map">
+        select
+        <include refid="Base_Column_List"/>
+        from mmall_user
+        where username like #{username}
+        and role=#{role}
     </select>
 </mapper>

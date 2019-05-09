@@ -10,10 +10,27 @@ public class Const {
 
     public static final String ftpHost="ftp.server.http.prefix";
 
-    public interface ROLE{
-        int ROLE_CUMSTOMER=0;//普通用户
-        int ROLE_SELLER=1;//商家
-        int ROLE_ADMIN=2;//管理员
+    public enum RoleEnum{
+
+        ROLE_CUMSTOMER(0,"普通用户"),
+        ROLE_SELLER(1,"商家"),
+        ROLE_ADMIN(2,"管理员");
+
+        private int code;
+        private String value;
+
+        RoleEnum(int code,String value){
+            this.code=code;
+            this.value=value;
+        }
+
+        public int getCode(){
+            return code;
+        }
+
+        public String getValue(){
+            return value;
+        }
     }
 
     public interface USER_STATUS{

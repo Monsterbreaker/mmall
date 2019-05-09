@@ -33,7 +33,7 @@ public class UserController {
         if (session.getAttribute(Const.CURRENT_USER) != null) {
             return ServerResponse.createByErrorMessage("当前已登录，请先登出");
         }
-        ServerResponse<User> response = iUserService.login(username, password);
+        ServerResponse<User> response = iUserService.login(username, password,Const.RoleEnum.ROLE_CUMSTOMER);
         if (response.isSuccess()) {
             session.setAttribute(Const.CURRENT_USER, response.getData());
         }
