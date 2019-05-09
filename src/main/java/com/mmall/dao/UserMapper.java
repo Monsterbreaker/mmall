@@ -3,6 +3,8 @@ package com.mmall.dao;
 import com.mmall.pojo.User;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 public interface UserMapper {
     int deleteByPrimaryKey(Integer id);
 
@@ -26,11 +28,11 @@ public interface UserMapper {
 
     String selectSaltByUsername(String username);
 
-    User selectLogin(@Param("username") String username, @Param("password") String password);
+    User selectLogin(@Param("username") String username, @Param("password") String password, @Param("role") Integer role);
 
     String selectQuestionByUsername(String username);
 
-    int checkAnswerByUsername(@Param("username") String username,@Param("answer") String answer);
+    int checkAnswerByUsername(@Param("username") String username, @Param("answer") String answer);
 
     int checkPasswordByUsername(@Param("username") String username, @Param("password") String password);
 
@@ -41,4 +43,6 @@ public interface UserMapper {
     int checkUsernameByUserId(@Param("username") String username, @Param("userId") Integer userId);
 
     String selectNameByUserId(Integer userId);
+
+    List<User> selectUsersByUsernameAndRole(@Param("username") String username, @Param("role") Integer role);
 }

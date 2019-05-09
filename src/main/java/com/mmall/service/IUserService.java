@@ -1,11 +1,12 @@
 package com.mmall.service;
 
+import com.mmall.common.Const;
 import com.mmall.common.ServerResponse;
 import com.mmall.pojo.User;
 
 public interface IUserService {
 
-    ServerResponse<User> login(String username, String password);
+    ServerResponse<User> login(String username, String password, Const.RoleEnum role);
 
     ServerResponse<String> register(User user);
 
@@ -30,4 +31,10 @@ public interface IUserService {
     ServerResponse checkSellerRole(User user);
 
     ServerResponse checkAdminRole(User user);
+
+    ServerResponse freeze(Integer userId);
+
+    ServerResponse thaw(Integer userId);
+
+    ServerResponse getUserList(String username, Integer role, int offset, int limit);
 }
