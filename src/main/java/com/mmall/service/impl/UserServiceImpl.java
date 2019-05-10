@@ -1,6 +1,8 @@
 package com.mmall.service.impl;
 
+import com.github.pagehelper.PageHelper;
 import com.mmall.common.Const;
+import com.mmall.common.ResponseCode;
 import com.mmall.common.ServerResponse;
 import com.mmall.common.TokenCache;
 import com.mmall.dao.UserMapper;
@@ -10,7 +12,9 @@ import com.mmall.util.MD5Util;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service("iUserService")
@@ -26,7 +30,7 @@ public class UserServiceImpl implements IUserService {
      * @return
      */
     @Override
-    public ServerResponse<User> login(String username, String password) {
+    public ServerResponse<User> login(String username, String password, Const.RoleEnum role) {
         //检查名字存不存在
         int resultCount = userMapper.checkUsername(username);
         if (resultCount == 0) {
@@ -34,15 +38,15 @@ public class UserServiceImpl implements IUserService {
         }
 
         //检查用户状态是否正常
-        ServerResponse serverResponse=checkStatus(username);
-        if(!serverResponse.isSuccess()){
+        ServerResponse serverResponse = checkStatus(username);
+        if (!serverResponse.isSuccess()) {
             return serverResponse;
         }
 
         String salt = userMapper.selectSaltByUsername(username);
         String MD5password = MD5Util.MD5EncodeUtf8(password, salt);
 
-        User user = userMapper.selectLogin(username, MD5password);
+        User user = userMapper.selectLogin(username, MD5password, role.getCode());
         if (user == null) {
             return ServerResponse.createByErrorMessage("密码错误");
         }
@@ -164,14 +168,14 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServerResponse<String> getQuestion(String username) {
         //检查用户名是否有效
-        int resultCount=userMapper.checkUsername(username);
-        if(resultCount==0){
+        int resultCount = userMapper.checkUsername(username);
+        if (resultCount == 0) {
             return ServerResponse.createByErrorMessage("用户名不存在");
         }
 
         //检查用户状态是否正常
-        ServerResponse serverResponse=checkStatus(username);
-        if(!serverResponse.isSuccess()){
+        ServerResponse serverResponse = checkStatus(username);
+        if (!serverResponse.isSuccess()) {
             return serverResponse;
         }
 
@@ -192,8 +196,8 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServerResponse<String> checkAnswer(String username, String answer) {
         //检查用户状态是否正常
-        ServerResponse serverResponse=checkStatus(username);
-        if(!serverResponse.isSuccess()){
+        ServerResponse serverResponse = checkStatus(username);
+        if (!serverResponse.isSuccess()) {
             return serverResponse;
         }
 
@@ -201,8 +205,8 @@ public class UserServiceImpl implements IUserService {
         int resultCount = userMapper.checkAnswerByUsername(username, answer);
         if (resultCount > 0) {
             //token写入本地缓存
-            String fogetToken=UUID.randomUUID().toString();
-            TokenCache.setKey(TokenCache.TOKEN_PREFIX+username,fogetToken);
+            String fogetToken = UUID.randomUUID().toString();
+            TokenCache.setKey(TokenCache.TOKEN_PREFIX + username, fogetToken);
 
             return ServerResponse.createBySuccess(fogetToken);
         }
@@ -211,6 +215,7 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 忘记密码，重置密码
+     *
      * @param username
      * @param newPassword
      * @param forgetToken
@@ -219,7 +224,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServerResponse<String> resetPassword(String username, String newPassword, String forgetToken) {
         //检查forgetToken参数是否正确
-        if(StringUtils.isBlank(forgetToken)){
+        if (StringUtils.isBlank(forgetToken)) {
             return ServerResponse.createByErrorMessage("参数错误，需要传递forgetToken");
         }
         //检查username参数是否正确
@@ -229,18 +234,18 @@ public class UserServiceImpl implements IUserService {
         }
 
         //检查forgetToken是否在localCache中
-        String localToken=TokenCache.getKey(TokenCache.TOKEN_PREFIX+username);
-        if(StringUtils.isBlank(localToken)){
+        String localToken = TokenCache.getKey(TokenCache.TOKEN_PREFIX + username);
+        if (StringUtils.isBlank(localToken)) {
             return ServerResponse.createByErrorMessage("token过期或无效");
         }
         //检查token是否正确
-        if(StringUtils.equals(localToken,forgetToken)){
-            int updateCount=userMapper.updatePasswordByUsername(username,encodePassword(username,newPassword));
-            if(updateCount>0){
-                TokenCache.removeKey(TokenCache.TOKEN_PREFIX+username);
+        if (StringUtils.equals(localToken, forgetToken)) {
+            int updateCount = userMapper.updatePasswordByUsername(username, encodePassword(username, newPassword));
+            if (updateCount > 0) {
+                TokenCache.removeKey(TokenCache.TOKEN_PREFIX + username);
                 return ServerResponse.createBySuccessMessage("重置密码成功");
             }
-        }else{
+        } else {
             return ServerResponse.createByErrorMessage("token错误，请重新获取token");
         }
         return ServerResponse.createByErrorMessage("重置密码失败");
@@ -258,7 +263,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServerResponse<String> modifyPassword(User user, String oldPassword, String newPassword) {
         //验证旧密码是否正确
-        int resultCount = userMapper.checkPasswordByUserId(user.getId(), encodePassword(user.getUsername(),oldPassword));
+        int resultCount = userMapper.checkPasswordByUserId(user.getId(), encodePassword(user.getUsername(), oldPassword));
         if (resultCount == 0) {
             return ServerResponse.createByErrorMessage("密码错误");
         }
@@ -280,14 +285,15 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 根据userId获取用户信息
+     *
      * @param userId
      * @return
      */
     @Override
     public ServerResponse<User> getInfo(Integer userId) {
         //查找用户信息
-        User user=userMapper.selectByPrimaryKey(userId);
-        if(user==null){
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (user == null) {
             return ServerResponse.createByErrorMessage("用户不存在");
         }
         return ServerResponse.createBySuccess(user);
@@ -295,36 +301,37 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 修改用户信息
+     *
      * @param user
      * @return
      */
     @Override
     public ServerResponse<User> updateInfo(User user) {
-        if(StringUtils.isNotBlank(user.getUsername())){
-            int resultCount=userMapper.checkUsernameByUserId(user.getUsername(),user.getId());
-            if(resultCount>0){
+        if (StringUtils.isNotBlank(user.getUsername())) {
+            int resultCount = userMapper.checkUsernameByUserId(user.getUsername(), user.getId());
+            if (resultCount > 0) {
                 return ServerResponse.createByErrorMessage("用户名已存在");
             }
-        }else{
+        } else {
             return ServerResponse.createByErrorMessage("新用户名不符合要求");
         }
-        if(StringUtils.isNotBlank(user.getUsername())){
-            int resultCount=userMapper.checkEmailByUserId(user.getEmail(),user.getId());
-            if(resultCount>0){
+        if (StringUtils.isNotBlank(user.getUsername())) {
+            int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+            if (resultCount > 0) {
                 return ServerResponse.createByErrorMessage("邮箱已存在");
             }
-        }else{
+        } else {
             return ServerResponse.createByErrorMessage("新邮箱不符合要求");
         }
-        User updateUser=new User();
+        User updateUser = new User();
         updateUser.setId(user.getId());
         updateUser.setUsername(user.getUsername());
         updateUser.setEmail(user.getEmail());
         updateUser.setPhone(user.getPhone());
         updateUser.setQuestion(user.getQuestion());
         updateUser.setAnswer(user.getAnswer());
-        int updateCount=userMapper.updateByPrimaryKeySelective(updateUser);
-        if(updateCount>0){
+        int updateCount = userMapper.updateByPrimaryKeySelective(updateUser);
+        if (updateCount > 0) {
             return ServerResponse.createBySuccessMessage("更新用户信息成功");
         }
         return ServerResponse.createByErrorMessage("更新用户信息失败");
@@ -343,18 +350,17 @@ public class UserServiceImpl implements IUserService {
     }
 
 
-
-
-
     //检查用户角色
+
     /**
      * 检查当前用户是不是顾客
+     *
      * @param user
      * @return
      */
     @Override
     public ServerResponse checkCustomerRole(User user) {
-        if(user!=null&&user.getRole()==Const.ROLE.ROLE_CUMSTOMER){
+        if (user != null && user.getRole() == Const.RoleEnum.ROLE_CUMSTOMER.getCode()) {
             return ServerResponse.createBySuccess();
         }
         return ServerResponse.createByErrorMessage("当前用户不是顾客");
@@ -362,12 +368,13 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 检查当前用户是不是卖家
+     *
      * @param user
      * @return
      */
     @Override
     public ServerResponse checkSellerRole(User user) {
-        if(user!=null&&user.getRole()==Const.ROLE.ROLE_SELLER){
+        if (user != null && user.getRole() == Const.RoleEnum.ROLE_SELLER.getCode()) {
             return ServerResponse.createBySuccess();
         }
         return ServerResponse.createByErrorMessage("当前用户不是卖家");
@@ -375,14 +382,102 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 检查当前用户是不是管理员
+     *
      * @param user
      * @return
      */
     @Override
-    public ServerResponse checkAdminRole(User user){
-        if(user!=null&&user.getRole()==Const.ROLE.ROLE_ADMIN){
+    public ServerResponse checkAdminRole(User user) {
+        if (user != null && user.getRole() == Const.RoleEnum.ROLE_ADMIN.getCode()) {
             return ServerResponse.createBySuccess();
         }
         return ServerResponse.createByErrorMessage("当前用户不是管理员");
+    }
+
+    /**
+     * 根据userId冻结用户
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public ServerResponse freeze(Integer userId) {
+        // 检查参数
+        if (userId == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 检查参数
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (user == null) {
+            return ServerResponse.createByErrorMessage("用户不存在");
+        }
+
+        // 检查用户状态
+        if (user.getStatus() == Const.USER_STATUS.USER_STATUS_FROZEN) {
+            return ServerResponse.createByErrorMessage("当前用户已被冻结");
+        }
+
+        // 更新用户状态
+        user.setStatus(Const.USER_STATUS.USER_STATUS_FROZEN);
+        int updateCount = userMapper.updateByPrimaryKeySelective(user);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("冻结成功", user);
+        }
+        return ServerResponse.createByErrorMessage("冻结失败");
+    }
+
+    /**
+     * 根据userId解冻账户
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public ServerResponse thaw(Integer userId) {
+        // 检查参数
+        if (userId == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+
+        // 检查参数
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (user == null) {
+            return ServerResponse.createByErrorMessage("用户不存在");
+        }
+
+        // 检查用户状态
+        if(user.getStatus()==Const.USER_STATUS.USER_STATUS_NORMAL){
+            return ServerResponse.createByErrorMessage("用户未被冻结");
+        }
+
+        // 更新用户状态
+        user.setStatus(Const.USER_STATUS.USER_STATUS_NORMAL);
+        int updateCount = userMapper.updateByPrimaryKeySelective(user);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("解冻成功", user);
+        }
+        return ServerResponse.createByErrorMessage("解冻失败");
+    }
+
+    /**
+     * 根据username和role模糊搜索，返回UserList
+     *
+     * @param username
+     * @param role
+     * @param offset
+     * @param limit
+     * @return
+     */
+    @Override
+    public ServerResponse getUserList(String username, Integer role, int offset, int limit) {
+        PageHelper.startPage(offset, limit);
+        if (StringUtils.isBlank(username)) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+        username = new StringBuilder().append("%").append(username).append("%").toString();
+        List<User> userList = userMapper.selectUsersByUsernameAndRole(username, role);
+
+        return ServerResponse.createBySuccess(userList);
     }
 }
