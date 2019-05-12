@@ -1,4 +1,4 @@
-package com.mmall.controller.customer;
+package com.mmall.controller.common;
 
 import com.mmall.common.Const;
 import com.mmall.common.ResponseCode;
@@ -20,20 +20,20 @@ public class UserController {
     IUserService iUserService;
 
     /**
-     * 登录
+     * 用户登录
      *
      * @param username
      * @param password
      * @param session
      * @return
      */
-    @RequestMapping(value = "login", method = RequestMethod.POST)
+    @RequestMapping(value = "customer_login", method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<User> login(String username, String password, HttpSession session) {
+    public ServerResponse<User> loginCustomer(String username, String password, HttpSession session) {
         if (session.getAttribute(Const.CURRENT_USER) != null) {
             return ServerResponse.createByErrorMessage("当前已登录，请先登出");
         }
-        ServerResponse<User> response = iUserService.login(username, password,Const.RoleEnum.ROLE_CUMSTOMER);
+        ServerResponse<User> response = iUserService.login(username, password, Const.RoleEnum.ROLE_CUMSTOMER.getCode());
         if (response.isSuccess()) {
             session.setAttribute(Const.CURRENT_USER, response.getData());
         }
@@ -41,15 +41,49 @@ public class UserController {
     }
 
     /**
-     * 注册
+     * 商家登录
+     *
+     * @param username
+     * @param password
+     * @param session
+     * @return
+     */
+    @RequestMapping(value = "seller_login", method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<User> loginSeller(String username, String password, HttpSession session) {
+        if (session.getAttribute(Const.CURRENT_USER) != null) {
+            return ServerResponse.createByErrorMessage("当前已登录，请先登出");
+        }
+        ServerResponse<User> response = iUserService.login(username, password, Const.RoleEnum.ROLE_SELLER.getCode());
+        if (response.isSuccess()) {
+            session.setAttribute(Const.CURRENT_USER, response.getData());
+        }
+        return response;
+    }
+
+    /**
+     * 注册顾客
      *
      * @param user
      * @return
      */
-    @RequestMapping(value = "register", method = RequestMethod.POST)
+    @RequestMapping(value = "customer_register", method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<String> register(User user) {
-        ServerResponse<String> response = iUserService.register(user);
+    public ServerResponse<String> registerCustomer(User user) {
+        ServerResponse<String> response = iUserService.register(user, Const.RoleEnum.ROLE_CUMSTOMER.getCode());
+        return response;
+    }
+
+    /**
+     * 注册商家
+     *
+     * @param user
+     * @return
+     */
+    @RequestMapping(value = "seller_register", method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<String> registerSeller(User user) {
+        ServerResponse<String> response = iUserService.register(user, Const.RoleEnum.ROLE_SELLER.getCode());
         return response;
     }
 
@@ -178,6 +212,15 @@ public class UserController {
         return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "用户未登录,无法修改密码");
     }
 
+    /**
+     * 修改用户信息
+     *
+     * @param session
+     * @param user
+     * @return
+     */
+    @RequestMapping(value = "info_modify", method = RequestMethod.POST)
+    @ResponseBody
     public ServerResponse<User> modifyInfo(HttpSession session, User user) {
         User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
         if (currentUser == null) {

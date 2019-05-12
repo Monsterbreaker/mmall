@@ -6,9 +6,9 @@ import com.mmall.pojo.User;
 
 public interface IUserService {
 
-    ServerResponse<User> login(String username, String password, Const.RoleEnum role);
+    ServerResponse<User> login(String username, String password, Integer role);
 
-    ServerResponse<String> register(User user);
+    ServerResponse<String> register(User user, Integer role);
 
     ServerResponse<String> checkValid(String str, String type);
 
