@@ -30,7 +30,7 @@ public class UserServiceImpl implements IUserService {
      * @return
      */
     @Override
-    public ServerResponse<User> login(String username, String password, Const.RoleEnum role) {
+    public ServerResponse<User> login(String username, String password, Integer role) {
         //检查名字存不存在
         int resultCount = userMapper.checkUsername(username);
         if (resultCount == 0) {
@@ -46,11 +46,13 @@ public class UserServiceImpl implements IUserService {
         String salt = userMapper.selectSaltByUsername(username);
         String MD5password = MD5Util.MD5EncodeUtf8(password, salt);
 
-        User user = userMapper.selectLogin(username, MD5password, role.getCode());
+        User user = userMapper.selectLogin(username, MD5password, role);
         if (user == null) {
             return ServerResponse.createByErrorMessage("密码错误");
         }
 
+        user.setPassword(StringUtils.EMPTY);
+        user.setSalt(StringUtils.EMPTY);
         return ServerResponse.createBySuccess("成功登录", user);
     }
 
@@ -61,7 +63,7 @@ public class UserServiceImpl implements IUserService {
      * @return
      */
     @Override
-    public ServerResponse<String> register(User user) {
+    public ServerResponse<String> register(User user, Integer role) {
         //检查用户名是否有效
         ServerResponse<String> serverResponse = checkValid(user.getUsername(), Const.USERNAME);
         if (!serverResponse.isSuccess()) {
@@ -81,7 +83,7 @@ public class UserServiceImpl implements IUserService {
         }
 
         //设置用户角色
-        //user.setRole(Const.ROLE.ROLE_CUMSTOMER);
+        user.setRole(role);
 
         //设置用户状态
         user.setStatus(Const.USER_STATUS.USER_STATUS_NORMAL);
@@ -296,6 +298,9 @@ public class UserServiceImpl implements IUserService {
         if (user == null) {
             return ServerResponse.createByErrorMessage("用户不存在");
         }
+
+        user.setPassword(StringUtils.EMPTY);
+        user.setSalt(StringUtils.EMPTY);
         return ServerResponse.createBySuccess(user);
     }
 
@@ -325,14 +330,13 @@ public class UserServiceImpl implements IUserService {
         }
         User updateUser = new User();
         updateUser.setId(user.getId());
-        updateUser.setUsername(user.getUsername());
         updateUser.setEmail(user.getEmail());
         updateUser.setPhone(user.getPhone());
         updateUser.setQuestion(user.getQuestion());
         updateUser.setAnswer(user.getAnswer());
         int updateCount = userMapper.updateByPrimaryKeySelective(updateUser);
         if (updateCount > 0) {
-            return ServerResponse.createBySuccessMessage("更新用户信息成功");
+            return ServerResponse.createBySuccess("更新用户信息成功", updateUser);
         }
         return ServerResponse.createByErrorMessage("更新用户信息失败");
     }
@@ -447,7 +451,7 @@ public class UserServiceImpl implements IUserService {
         }
 
         // 检查用户状态
-        if(user.getStatus()==Const.USER_STATUS.USER_STATUS_NORMAL){
+        if (user.getStatus() == Const.USER_STATUS.USER_STATUS_NORMAL) {
             return ServerResponse.createByErrorMessage("用户未被冻结");
         }
 
@@ -477,6 +481,11 @@ public class UserServiceImpl implements IUserService {
         }
         username = new StringBuilder().append("%").append(username).append("%").toString();
         List<User> userList = userMapper.selectUsersByUsernameAndRole(username, role);
+
+        for (User user : userList) {
+            user.setPassword(StringUtils.EMPTY);
+            user.setSalt(StringUtils.EMPTY);
+        }
 
         return ServerResponse.createBySuccess(userList);
     }
