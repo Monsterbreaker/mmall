@@ -9,19 +9,19 @@ import com.mmall.dao.*;
 import com.mmall.pojo.*;
 import com.mmall.util.DateTimeUtil;
 import com.mmall.util.PropertiesUtil;
-import com.mmall.vo.GroupedCartVo;
+import com.mmall.vo.*;
 import com.mmall.common.ServerResponse;
 import com.mmall.service.IOrderService;
 import com.mmall.util.BigDecimalUtil;
-import com.mmall.vo.OrderItemVo;
-import com.mmall.vo.OrderVo;
-import com.mmall.vo.ShippingVo;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -52,8 +52,8 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public ServerResponse createOrder(Integer userId, Integer shippingId) {
         // 检查参数
-        if(shippingId==null){
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        if (shippingId == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
 
         // 拿购物车数据,按商家分类
@@ -103,8 +103,8 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public ServerResponse getOrderByCustomer(Long orderNo, Integer userId) {
         // 检查参数
-        if(orderNo==null){
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        if (orderNo == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
 
         // 获取订单概要
@@ -150,8 +150,8 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public ServerResponse confirmReceipt(Integer userId, Long orderNo) {
         // 检查参数
-        if(orderNo==null){
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        if (orderNo == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
 
         Order order = orderMapper.selectByOrderNoAndUserId(orderNo, userId);
@@ -187,8 +187,8 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public ServerResponse cancel(Integer userId, Long orderNo) {
         // 检查参数
-        if(orderNo==null){
-            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        if (orderNo == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
 
         Order order = orderMapper.selectByOrderNoAndUserId(orderNo, userId);
@@ -306,7 +306,81 @@ public class OrderServiceImpl implements IOrderService {
         return ServerResponse.createByErrorMessage("发货失败");
     }
 
+
+    /**
+     * 商家查看营业状况
+     *
+     * @param days
+     * @param sellerId
+     * @return
+     */
+    @Override
+    public ServerResponse getTurnoverBySeller(Integer days, Integer sellerId) {
+        if (days == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+        List<TurnoverItemVo> turnoverItemVoList = Lists.newArrayList();
+        BigDecimal turnover = new BigDecimal("0");
+        for (int i = days; i >= 0; i--) {
+            TurnoverItemVo turnoverItemVo = orderMapper.selectDayBySeller(sellerId,i);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DATE, -i);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String date = simpleDateFormat.format(calendar.getTime());
+
+            turnoverItemVo.setDate(date);
+
+            turnoverItemVoList.add(turnoverItemVo);
+
+            turnover = BigDecimalUtil.add(turnover.doubleValue(), turnoverItemVo.getTurnover().doubleValue());
+
+        }
+        TurnoverVo turnoverVo = new TurnoverVo();
+        turnoverVo.setDays(days+1);
+        turnoverVo.setTurnover(turnover);
+        turnoverVo.setTurnoverItemVoList(turnoverItemVoList);
+        return ServerResponse.createBySuccess(turnoverVo);
+    }
+
     /*-----------------------------------------------商家订单功能End---------------------------------------------------*/
+
+
+    /*-----------------------------------------------Admin订单功能Start---------------------------------------------------*/
+
+    /**
+     * 管理员查看营业状况
+     *
+     * @param days
+     * @return
+     */
+    @Override
+    public ServerResponse getTurnoverByAdmin(Integer days) {
+        List<TurnoverItemVo> turnoverItemVoList = Lists.newArrayList();
+        BigDecimal turnover = new BigDecimal("0");
+        for (int i = days; i >= 0; i--) {
+            TurnoverItemVo turnoverItemVo = orderMapper.selectDayByAdmin(i);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DATE, -i);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String date = simpleDateFormat.format(calendar.getTime());
+
+            turnoverItemVo.setDate(date);
+
+            turnoverItemVoList.add(turnoverItemVo);
+
+            turnover = BigDecimalUtil.add(turnover.doubleValue(), turnoverItemVo.getTurnover().doubleValue());
+
+        }
+        TurnoverVo turnoverVo = new TurnoverVo();
+        turnoverVo.setDays(days+1);
+        turnoverVo.setTurnover(turnover);
+        turnoverVo.setTurnoverItemVoList(turnoverItemVoList);
+        return ServerResponse.createBySuccess(turnoverVo);
+    }
+
+    /*-----------------------------------------------Admin订单功能End---------------------------------------------------*/
 
     /**
      * 根据购物车中选中商品，生成单个商家的OrderItem

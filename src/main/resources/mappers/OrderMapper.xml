@@ -63,6 +63,22 @@
         from mmall_order
         where seller_id=#{sellerId}
     </select>
+    <select id="selectDayBySeller" resultType="com.mmall.vo.TurnoverItemVo" parameterType="int">
+        SELECT
+        COALESCE(SUM(payment),0) `turnover`,
+        count(id) `count`
+        from mmall_order
+        where
+        seller_id=#{sellerId}
+        and to_days(NOW()) - TO_DAYS(payment_time) = #{days}
+    </select>
+    <select id="selectDayByAdmin" resultType="com.mmall.vo.TurnoverItemVo" parameterType="int">
+        SELECT
+        COALESCE(SUM(payment),0) `turnover`,
+        count(id) `count`
+        from mmall_order
+        where to_days(NOW()) - TO_DAYS(payment_time) = #{days}
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from mmall_order
     where id = #{id,jdbcType=INTEGER}

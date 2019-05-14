@@ -19,4 +19,8 @@ public interface IOrderService {
     ServerResponse getOrderListBySeller(Integer sellerId, int offset, int limit);
 
     ServerResponse deliver(Integer sellerId, Long orderNo);
+
+    ServerResponse getTurnoverByAdmin(Integer days);
+
+    ServerResponse getTurnoverBySeller(Integer days,Integer sellerId);
 }

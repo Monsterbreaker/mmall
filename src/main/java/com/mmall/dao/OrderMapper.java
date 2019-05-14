@@ -1,6 +1,7 @@
 package com.mmall.dao;
 
 import com.mmall.pojo.Order;
+import com.mmall.vo.TurnoverItemVo;
 import org.apache.ibatis.annotations.Param;
 import org.aspectj.weaver.ast.Or;
 
@@ -30,4 +31,8 @@ public interface OrderMapper {
     List<Order> selectByUserId(Integer userId);
 
     List<Order> selectBySellerId(Integer sellerId);
+
+    TurnoverItemVo selectDayBySeller(@Param("sellerId") Integer sellerId, @Param("days") Integer days);
+
+    TurnoverItemVo selectDayByAdmin(Integer days);
 }
