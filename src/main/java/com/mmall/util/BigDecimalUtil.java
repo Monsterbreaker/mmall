@@ -2,9 +2,6 @@ package com.mmall.util;
 
 import java.math.BigDecimal;
 
-/**
- * Created by geely
- */
 public class BigDecimalUtil {
 
     private BigDecimalUtil(){
@@ -36,6 +33,7 @@ public class BigDecimalUtil {
         BigDecimal b2 = new BigDecimal(Double.toString(v2));
         return b1.divide(b2,2,BigDecimal.ROUND_HALF_UP);//四舍五入,保留2位小数
 
+        //bigdecimal库里面的divide方法，第一个参数就是操作数，第二个是保留小数的位数，第三个是模式(这里选择四舍五入)
         //除不尽的情况
     }
 
