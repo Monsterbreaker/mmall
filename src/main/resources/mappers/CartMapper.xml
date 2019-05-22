@@ -153,7 +153,7 @@
     <include refid="Base_Column_List"></include>
     from mmall_cart
     where user_id=#{userId}
-    and produck_id=#{produckId}
+    and product_id=#{productId}
   </select>
 
   <select id="selectCartByUserId" resultMap="BaseResultMap" parameterType="int">
