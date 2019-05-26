@@ -3,6 +3,8 @@ package com.mmall.service;
 import com.mmall.common.Const;
 import com.mmall.common.ServerResponse;
 
+import java.util.Map;
+
 public interface IOrderService {
     ServerResponse createOrder(Integer userId, Integer shippingId);
 
@@ -23,4 +25,10 @@ public interface IOrderService {
     ServerResponse getTurnoverByAdmin(Integer days);
 
     ServerResponse getTurnoverBySeller(Integer days,Integer sellerId);
+
+    ServerResponse pay(Long orderNo,Integer userId,String path);
+
+    ServerResponse aliCallback(Map<String,String> params);
+
+    ServerResponse queryOrderPayStatus(Integer userId,Long orderNo);
 }
