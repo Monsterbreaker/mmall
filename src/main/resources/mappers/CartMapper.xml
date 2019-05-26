@@ -16,7 +16,7 @@
     <id property="sellerId" column="seller_id" jdbcType="INTEGER" javaType="java.lang.Integer"/>
     <result property="sellerName" column="seller_name" jdbcType="VARCHAR" javaType="java.lang.String"/>
     <result property="userId" column="user_id" jdbcType="INTEGER" javaType="java.lang.Integer"/>
-    <collection property="carts" column="seller_id" ofType="com.mmall.pojo.Cart" javaType="ArrayList" select="selectCheckedGroupBySellerId"/>
+    <collection property="carts" column="{sellerId=seller_id,userId=user_id}" ofType="com.mmall.pojo.Cart" javaType="ArrayList" select="selectCheckedGroupBySellerId"/>
   </resultMap>
   <sql id="Base_Column_List" >
     id, user_id, product_id, quantity, checked, create_time, update_time
@@ -27,7 +27,7 @@
     from mmall_cart
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <select id="selectCheckedGroupBySellerId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+  <select id="selectCheckedGroupBySellerId" resultMap="BaseResultMap" parameterType="map">
     select
       mmall_cart.id,
       mmall_cart.user_id,
@@ -39,7 +39,8 @@
     FROM
       mmall_cart
     INNER JOIN mmall_product ON mmall_cart.product_id = mmall_product.id
-    where seller_id = #{seller_id,jdbcType=INTEGER}
+    where seller_id = #{sellerId,jdbcType=INTEGER}
+    and user_id=#{userId,jdbcType=INTEGER}
     and checked=1
   </select>
   <select id="selectByPrimaryKeyGroupBySellerId" resultMap="GroupedCarts" parameterType="java.lang.Integer">
