@@ -90,7 +90,7 @@ public class OrderServiceImpl implements IOrderService {
 
         //组装orderVoList
         List<OrderVo> orderVoList = assembleOrderVoList(orderList);
-        return ServerResponse.createBySuccess("创建订单成功", orderItemsList);
+        return ServerResponse.createBySuccess("创建订单成功", orderVoList);
     }
 
     /**
