@@ -16,6 +16,7 @@ import com.mmall.util.BigDecimalUtil;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -84,9 +85,8 @@ public class OrderServiceImpl implements IOrderService {
             Order order = assembleOrder(orderNo, userId, groupedCartVo.getSellerId(), groupedCartVo.getSellerName(), shippingId, payment, Const.PayPlatformEnum.ALIPAY.getCode(), postage);
             orderList.add(order);
         }
-        //将Order和OrderItem批量插入数据库,减少库存
-        // TODO: 2019/5/3 购物车数量减少 
-        createOrderUpdateDB(orderList, orderItemsList);
+        //将Order和OrderItem批量插入数据库,减少库存,更新购物车
+        createOrderUpdateDB(orderList, orderItemsList,groupedCartVoList);
 
         //组装orderVoList
         List<OrderVo> orderVoList = assembleOrderVoList(orderList);
@@ -322,7 +322,7 @@ public class OrderServiceImpl implements IOrderService {
         List<TurnoverItemVo> turnoverItemVoList = Lists.newArrayList();
         BigDecimal turnover = new BigDecimal("0");
         for (int i = days; i >= 0; i--) {
-            TurnoverItemVo turnoverItemVo = orderMapper.selectDayBySeller(sellerId,i);
+            TurnoverItemVo turnoverItemVo = orderMapper.selectDayBySeller(sellerId, i);
 
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.DATE, -i);
@@ -337,7 +337,7 @@ public class OrderServiceImpl implements IOrderService {
 
         }
         TurnoverVo turnoverVo = new TurnoverVo();
-        turnoverVo.setDays(days+1);
+        turnoverVo.setDays(days + 1);
         turnoverVo.setTurnover(turnover);
         turnoverVo.setTurnoverItemVoList(turnoverItemVoList);
         return ServerResponse.createBySuccess(turnoverVo);
@@ -374,7 +374,7 @@ public class OrderServiceImpl implements IOrderService {
 
         }
         TurnoverVo turnoverVo = new TurnoverVo();
-        turnoverVo.setDays(days+1);
+        turnoverVo.setDays(days + 1);
         turnoverVo.setTurnover(turnover);
         turnoverVo.setTurnoverItemVoList(turnoverItemVoList);
         return ServerResponse.createBySuccess(turnoverVo);
@@ -491,11 +491,19 @@ public class OrderServiceImpl implements IOrderService {
      * @param orderItemsList
      * @return
      */
-    private ServerResponse createOrderUpdateDB(List<Order> orderList, List<List<OrderItem>> orderItemsList) {
+    private ServerResponse createOrderUpdateDB(List<Order> orderList,
+                                               List<List<OrderItem>> orderItemsList,
+                                               List<GroupedCartVo> groupedCartVoList) {
         orderMapper.batchInsert(orderList);
         for (List<OrderItem> orderItemList : orderItemsList) {
             orderItemMapper.batchInsert(orderItemList);
             reduceStock(orderItemList);
+        }
+        for (GroupedCartVo groupedCartVo : groupedCartVoList) {
+            List<Cart> cartList = groupedCartVo.getCarts();
+            for (Cart cart : cartList) {
+                cartMapper.deleteByPrimaryKey(cart.getId());
+            }
         }
         return ServerResponse.createBySuccessMessage("创建订单成功");
     }
