@@ -16,6 +16,8 @@ public interface IOrderService {
 
     ServerResponse cancel(Integer userId, Long orderNo);
 
+    ServerResponse getOrderCartProduct(Integer userId);
+
     ServerResponse getOrderBySeller(Integer sellerId, Long orderNo);
 
     ServerResponse getOrderListBySeller(Integer sellerId, int offset, int limit);

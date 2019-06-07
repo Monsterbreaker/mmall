@@ -56,12 +56,14 @@
         <include refid="Base_Column_List"/>
         from mmall_order
         where user_id=#{userId}
+        order by create_time desc
     </select>
     <select id="selectBySellerId" resultMap="BaseResultMap" parameterType="int">
         select
         <include refid="Base_Column_List"/>
         from mmall_order
         where seller_id=#{sellerId}
+        order by create_time desc
     </select>
     <select id="selectDayBySeller" resultType="com.mmall.vo.TurnoverItemVo" parameterType="int">
         SELECT

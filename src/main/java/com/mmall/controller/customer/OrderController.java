@@ -64,12 +64,12 @@ public class OrderController {
      * 获取某个订单
      *
      * @param session
-     * @param order_no
+     * @param orderNo
      * @return
      */
     @RequestMapping(value = "detail", method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse getOrder(HttpSession session, Long order_no) {
+    public ServerResponse getOrder(HttpSession session, Long orderNo) {
         //检查有没有登录
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
@@ -82,22 +82,22 @@ public class OrderController {
             return serverResponse;
         }
 
-        return iOrderService.getOrderByCustomer(order_no, user.getId());
+        return iOrderService.getOrderByCustomer(orderNo, user.getId());
     }
 
     /**
      * 顾客查看订单列表
      *
      * @param session
-     * @param offset
-     * @param limit
+     * @param pageNum
+     * @param pageSize
      * @return
      */
     @RequestMapping(value = "list", method = RequestMethod.GET)
     @ResponseBody
     public ServerResponse getOrderList(HttpSession session,
-                                       @RequestParam(value = "pageNum", defaultValue = "1") int offset,
-                                       @RequestParam(value = "pageSize", defaultValue = "10") int limit) {
+                                       @RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
+                                       @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         // 检查有没有登录
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
@@ -110,7 +110,7 @@ public class OrderController {
             return serverResponse;
         }
 
-        return iOrderService.getOrderListByCustomer(user.getId(), offset, limit);
+        return iOrderService.getOrderListByCustomer(user.getId(), pageNum, pageSize);
     }
 
     // TODO: 2019/5/7 删除订单
@@ -165,7 +165,15 @@ public class OrderController {
         return iOrderService.cancel(user.getId(), orderNo);
     }
 
-
+    @RequestMapping("get_order_cart_product.do")
+    @ResponseBody
+    public ServerResponse getOrderCartProduct(HttpSession session){
+        User user = (User)session.getAttribute(Const.CURRENT_USER);
+        if(user ==null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iOrderService.getOrderCartProduct(user.getId());
+    }
 
 
 

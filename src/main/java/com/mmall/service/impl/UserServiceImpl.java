@@ -312,22 +312,22 @@ public class UserServiceImpl implements IUserService {
      */
     @Override
     public ServerResponse<User> updateInfo(User user) {
-        if (StringUtils.isNotBlank(user.getUsername())) {
-            int resultCount = userMapper.checkUsernameByUserId(user.getUsername(), user.getId());
-            if (resultCount > 0) {
-                return ServerResponse.createByErrorMessage("用户名已存在");
-            }
-        } else {
-            return ServerResponse.createByErrorMessage("新用户名不符合要求");
-        }
-        if (StringUtils.isNotBlank(user.getUsername())) {
-            int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
-            if (resultCount > 0) {
-                return ServerResponse.createByErrorMessage("邮箱已存在");
-            }
-        } else {
-            return ServerResponse.createByErrorMessage("新邮箱不符合要求");
-        }
+//        if (StringUtils.isNotBlank(user.getUsername())) {
+//            int resultCount = userMapper.checkUsernameByUserId(user.getUsername(), user.getId());
+//            if (resultCount > 0) {
+//                return ServerResponse.createByErrorMessage("用户名已存在");
+//            }
+//        } else {
+//            return ServerResponse.createByErrorMessage("新用户名不符合要求");
+//        }
+//        if (StringUtils.isNotBlank(user.getUsername())) {
+//            int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+//            if (resultCount > 0) {
+//                return ServerResponse.createByErrorMessage("邮箱已存在");
+//            }
+//        } else {
+//            return ServerResponse.createByErrorMessage("新邮箱不符合要求");
+//        }
         User updateUser = new User();
         updateUser.setId(user.getId());
         updateUser.setEmail(user.getEmail());

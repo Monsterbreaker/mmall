@@ -26,12 +26,10 @@ import com.mmall.common.ServerResponse;
 import com.mmall.service.IOrderService;
 import com.mmall.util.BigDecimalUtil;
 import org.apache.commons.lang.StringUtils;
-import org.aspectj.weaver.ast.Or;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
@@ -145,13 +143,15 @@ public class OrderServiceImpl implements IOrderService {
      * 顾客查看订单列表
      *
      * @param userId
-     * @param offset
-     * @param limit
+     * @param pageNum
+     * @param pageSize
      * @return
      */
     @Override
-    public ServerResponse getOrderListByCustomer(Integer userId, int offset, int limit) {
-        PageHelper.offsetPage(offset, limit);
+    public ServerResponse getOrderListByCustomer(Integer userId, int pageNum, int pageSize) {
+        System.out.println(pageNum);
+        System.out.println(pageSize);
+        PageHelper.startPage(pageNum,pageSize);
         List<Order> orderList = orderMapper.selectByUserId(userId);
         List<OrderVo> orderVoList = assembleOrderVoList(orderList);
         PageInfo pageInfo = new PageInfo(orderList);
@@ -231,6 +231,62 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         return ServerResponse.createByErrorMessage("取消订单失败");
+    }
+
+    @Override
+    public ServerResponse getOrderCartProduct(Integer userId){
+        OrderProductVo orderProductVo = new OrderProductVo();
+        //从购物车中获取数据
+
+        List<Cart> cartList = cartMapper.selectCheckedCartByUserId(userId);
+        ServerResponse serverResponse =  this.getCartOrderItem(userId,cartList);
+        if(!serverResponse.isSuccess()){
+            return serverResponse;
+        }
+        List<OrderItem> orderItemList =( List<OrderItem> ) serverResponse.getData();
+
+        List<OrderItemVo> orderItemVoList = Lists.newArrayList();
+
+        BigDecimal payment = new BigDecimal("0");
+        for(OrderItem orderItem : orderItemList){
+            payment = BigDecimalUtil.add(payment.doubleValue(),orderItem.getTotalPrice().doubleValue());
+            orderItemVoList.add(assembleOrderItemVo(orderItem));
+        }
+        orderProductVo.setProductTotalPrice(payment);
+        orderProductVo.setOrderItemVoList(orderItemVoList);
+        orderProductVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
+        return ServerResponse.createBySuccess(orderProductVo);
+    }
+
+    private ServerResponse getCartOrderItem(Integer userId,List<Cart> cartList){
+        List<OrderItem> orderItemList = Lists.newArrayList();
+        if(org.apache.commons.collections.CollectionUtils.isEmpty(cartList)){
+            return ServerResponse.createByErrorMessage("购物车为空");
+        }
+
+        //校验购物车的数据,包括产品的状态和数量
+        for(Cart cartItem : cartList){
+            OrderItem orderItem = new OrderItem();
+            Product product = productMapper.selectByPrimaryKey(cartItem.getProductId());
+            if(Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()){
+                return ServerResponse.createByErrorMessage("产品"+product.getName()+"不是在线售卖状态");
+            }
+
+            //校验库存
+            if(cartItem.getQuantity() > product.getStock()){
+                return ServerResponse.createByErrorMessage("产品"+product.getName()+"库存不足");
+            }
+
+            orderItem.setUserId(userId);
+            orderItem.setProductId(product.getId());
+            orderItem.setProductName(product.getName());
+            orderItem.setProductImage(product.getMainImage());
+            orderItem.setCurrentUnitPrice(product.getPrice());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setTotalPrice(BigDecimalUtil.mul(product.getPrice().doubleValue(),cartItem.getQuantity()));
+            orderItemList.add(orderItem);
+        }
+        return ServerResponse.createBySuccess(orderItemList);
     }
 
     /*-----------------------------------------------用户订单功能End---------------------------------------------------*/
