@@ -1,5 +1,6 @@
 package com.mmall.service;
 
+import com.github.pagehelper.PageInfo;
 import com.mmall.common.Const;
 import com.mmall.common.ServerResponse;
 import com.mmall.pojo.User;
@@ -36,5 +37,5 @@ public interface IUserService {
 
     ServerResponse thaw(Integer userId);
 
-    ServerResponse getUserList(String username, Integer role, int offset, int limit);
+    ServerResponse<PageInfo> getUserList(String username, Integer role, int offset, int limit);
 }

@@ -1,6 +1,7 @@
 package com.mmall.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.mmall.common.Const;
 import com.mmall.common.ResponseCode;
 import com.mmall.common.ServerResponse;
@@ -474,7 +475,7 @@ public class UserServiceImpl implements IUserService {
      * @return
      */
     @Override
-    public ServerResponse getUserList(String username, Integer role, int offset, int limit) {
+    public ServerResponse<PageInfo> getUserList(String username, Integer role, int offset, int limit) {
         PageHelper.startPage(offset, limit);
         if (StringUtils.isBlank(username)) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
@@ -486,7 +487,8 @@ public class UserServiceImpl implements IUserService {
             user.setPassword(StringUtils.EMPTY);
             user.setSalt(StringUtils.EMPTY);
         }
-
-        return ServerResponse.createBySuccess(userList);
+        PageInfo pageInfo = new PageInfo(userList);
+        pageInfo.setList(userList);
+        return ServerResponse.createBySuccess(pageInfo);
     }
 }

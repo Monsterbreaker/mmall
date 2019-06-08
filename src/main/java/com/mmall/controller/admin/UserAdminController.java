@@ -1,5 +1,6 @@
 package com.mmall.controller.admin;
 
+import com.github.pagehelper.PageInfo;
 import com.mmall.common.Const;
 import com.mmall.common.ResponseCode;
 import com.mmall.common.ServerResponse;
@@ -132,10 +133,10 @@ public class UserAdminController {
      */
     @RequestMapping(value = "customer", method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse getCustomerList(HttpSession session,
-                                          String username,
-                                          @RequestParam(value = "pageNum", defaultValue = "1") int offset,
-                                          @RequestParam(value = "pageSize", defaultValue = "10") int limit) {
+    public ServerResponse<PageInfo> getCustomerList(HttpSession session,
+                                                    String username,
+                                                    @RequestParam(value = "pageNum", defaultValue = "1") int offset,
+                                                    @RequestParam(value = "pageSize", defaultValue = "10") int limit) {
         // 检查是否登录
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
@@ -162,7 +163,7 @@ public class UserAdminController {
      */
     @RequestMapping(value = "seller", method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse getSellerList(HttpSession session,
+    public ServerResponse<PageInfo> getSellerList(HttpSession session,
                                         String username,
                                         @RequestParam(value = "pageNum", defaultValue = "1") int offset,
                                         @RequestParam(value = "pageSize", defaultValue = "10") int limit) {
